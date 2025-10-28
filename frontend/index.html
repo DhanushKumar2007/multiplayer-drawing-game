@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing Game - Home</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <div class="container">
+        <header class="home-header">
+            <h1>🎨 Multiplayer Drawing Game</h1>
+            <p class="subtitle">Draw, Guess, and Have Fun with Friends!</p>
+        </header>
+
+        <main class="home-content">
+            <div class="card">
+                <h2>Create a Room</h2>
+                <p class="card-description">Start a new game and invite your friends</p>
+                <form id="createRoomForm">
+                    <div class="form-group">
+                        <label for="createUsername">Your Name:</label>
+                        <input 
+                            type="text" 
+                            id="createUsername" 
+                            placeholder="Enter your name" 
+                            maxlength="20" 
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-large">
+                        🚀 Create Room
+                    </button>
+                </form>
+            </div>
+
+            <div class="divider">
+                <span>OR</span>
+            </div>
+
+            <div class="card">
+                <h2>Join a Room</h2>
+                <p class="card-description">Enter a room code to join an existing game</p>
+                <form id="joinRoomForm">
+                    <div class="form-group">
+                        <label for="joinUsername">Your Name:</label>
+                        <input 
+                            type="text" 
+                            id="joinUsername" 
+                            placeholder="Enter your name" 
+                            maxlength="20" 
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="roomCode">Room Code:</label>
+                        <input 
+                            type="text" 
+                            id="roomCode" 
+                            placeholder="Enter 6-digit code" 
+                            maxlength="6" 
+                            required
+                            style="text-transform: uppercase;"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-secondary btn-large">
+                        🎮 Join Room
+                    </button>
+                </form>
+            </div>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </main>
+
+        <footer class="home-footer">
+            <div class="game-rules">
+                <div class="rule-item">
+                    <span class="icon">👥</span>
+                    <span>2-8 Players</span>
+                </div>
+                <div class="rule-item">
+                    <span class="icon">⏱️</span>
+                    <span>60 sec/turn</span>
+                </div>
+                <div class="rule-item">
+                    <span class="icon">🔄</span>
+                    <span>3 Rounds</span>
+                </div>
+                <div class="rule-item">
+                    <span class="icon">🏆</span>
+                    <span>Most Points Wins</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="js/socket-client.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

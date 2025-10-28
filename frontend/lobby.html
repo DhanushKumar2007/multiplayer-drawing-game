@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby - Drawing Game</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/lobby.css">
+</head>
+<body>
+    <div class="container lobby-container">
+        <header class="lobby-header">
+            <h1>🎨 Game Lobby</h1>
+            <div class="room-code-display">
+                <span class="label">Room Code:</span>
+                <span id="roomCodeDisplay" class="room-code"></span>
+                <button id="copyCodeBtn" class="btn-icon" title="Copy room code">
+                    📋
+                </button>
+            </div>
+        </header>
+
+        <main class="lobby-content">
+            <div class="lobby-left">
+                <div class="players-section">
+                    <h2>
+                        <span>👥 Players</span>
+                        <span class="player-count">(<span id="playerCount">0</span>/8)</span>
+                    </h2>
+                    <div id="playersList" class="players-list">
+                        <!-- Players will be added dynamically via JavaScript -->
+                    </div>
+                    <div id="waitingForPlayers" class="waiting-indicator">
+                        <p>⏳ Waiting for players to join...</p>
+                        <p class="min-players-note">Minimum 2 players required to start</p>
+                    </div>
+                </div>
+
+                <div class="lobby-actions">
+                    <button id="startGameBtn" class="btn btn-primary btn-large" style="display: none;">
+                        🎮 Start Game
+                    </button>
+                    <p id="waitingMessage" class="waiting-message" style="display: none;">
+                        ⏳ Waiting for host to start the game...
+                    </p>
+                    <button id="leaveRoomBtn" class="btn btn-danger">
+                        🚪 Leave Room
+                    </button>
+                </div>
+            </div>
+
+            <div class="lobby-right">
+                <div class="info-card">
+                    <h3>📖 How to Play</h3>
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-icon">🎨</span>
+                            <span>Take turns drawing a secret word</span>
+                        </li>
+                        <li>
+                            <span class="info-icon">🔍</span>
+                            <span>Guess what others are drawing in the chat</span>
+                        </li>
+                        <li>
+                            <span class="info-icon">⚡</span>
+                            <span>Fast guesses earn bonus points!</span>
+                        </li>
+                        <li>
+                            <span class="info-icon">🏆</span>
+                            <span>Player with most points after 3 rounds wins</span>
+                        </li>
+                        <li>
+                            <span class="info-icon">😂</span>
+                            <span>Use emoji reactions to express yourself</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <h3>⚙️ Game Settings</h3>
+                    <ul class="info-list">
+                        <li>
+                            <span class="info-icon">⏱️</span>
+                            <span><strong>60 seconds</strong> per turn</span>
+                        </li>
+                        <li>
+                            <span class="info-icon">🔄</span>
+                            <span><strong>3 rounds</strong> total</span>
+                        </li>
+                        <li>
+                            <span class="info-icon">📊</span>
+                            <span><strong>10 points</strong> per correct guess</span>
+                        </li>
+                        <li>
+                            <span class="info-icon">⚡</span>
+                            <span><strong>+5 bonus</strong> for guessing under 30 seconds</span>
+                        </li>
+                        <li>
+                            <span class="info-icon">🎯</span>
+                            <span>Drawer earns <strong>5 points</strong> per correct guess</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="successMessage" class="success-message" style="display: none;"></div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="js/socket-client.js"></script>
+    <script src="js/main.js"></script>
+    
+    <script>
+        // Get room code from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomCode = urlParams.get('room');
+        
+        if (roomCode) {
+            document.getElementById('roomCodeDisplay').textContent = roomCode;
+        } else {
+            // No room code, redirect to home
+            window.location.href = 'index.html';
+        }
+
+        // Copy room code functionality
+        document.getElementById('copyCodeBtn').addEventListener('click', function() {
+            const code = document.getElementById('roomCodeDisplay').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showSuccessMessage('Room code copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        });
+
+        function showSuccessMessage(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

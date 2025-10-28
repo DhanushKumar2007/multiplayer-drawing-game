@@ -1,0 +1,132 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+
+# IDE - PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDE - Other
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS Files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Test files
+test/
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+```
+
+---
+
+## 🧪 **COMPLETE LOCAL TESTING GUIDE**
+
+### **Step 1: Verify Your Folder Structure**
+
+Your project should look like this:
+```
+multiplayer_drawing_game/
+│
+├── .gitignore                 ← CREATE THIS
+├── README.md
+│
+├── backend/
+│   ├── app.py
+│   ├── config.py
+│   ├── game_logic.py
+│   ├── rooms.py
+│   ├── scoring.py
+│   ├── words.py
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── index.html
+│   ├── lobby.html
+│   ├── game.html
+│   ├── results.html
+│   │
+│   ├── css/
+│   │   ├── main.css
+│   │   ├── lobby.css
+│   │   └── game.css
+│   │
+│   └── js/
+│       ├── socket-client.js
+│       ├── canvas.js
+│       ├── chat.js
+│       ├── reactions.js
+│       ├── timer.js
+│       ├── scoreboard.js
+│       └── main.js
+│
+└── static/
+    └── emojis/
+        ├── laugh.png (optional)
+        ├── heart.png (optional)
+        └── ... (emoji images)

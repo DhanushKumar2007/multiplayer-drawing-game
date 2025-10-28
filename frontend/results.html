@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Results - Drawing Game</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .results-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .results-content {
+            text-align: center;
+        }
+
+        .winner-section {
+            margin: 40px 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+        }
+
+        .trophy {
+            font-size: 80px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .winner-section h2 {
+            font-size: 36px;
+            margin: 20px 0;
+        }
+
+        .winner-score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .winner-names {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+        .final-scoreboard {
+            margin: 40px 0;
+        }
+
+        .final-scoreboard h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .scores-list {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: transform 0.2s;
+        }
+
+        .score-item:hover {
+            transform: translateX(5px);
+        }
+
+        .score-item.first-place {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .score-item .rank {
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: 15px;
+            min-width: 40px;
+        }
+
+        .score-item .player-name {
+            flex: 1;
+            text-align: left;
+            font-size: 18px;
+        }
+
+        .score-item .player-score {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .actions {
+            margin: 40px 0;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-large {
+            padding: 15px 40px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container results-container">
+        <header>
+            <h1>🎉 Game Over!</h1>
+        </header>
+
+        <main class="results-content">
+            <div class="winner-section">
+                <div id="winnerDisplay" class="winner-display">
+                    <div class="trophy">🏆</div>
+                    <h2>Loading results...</h2>
+                </div>
+            </div>
+
+            <div class="final-scoreboard">
+                <h2>📊 Final Scores</h2>
+                <div id="finalScoresList" class="scores-list">
+                    <!-- Scores will be added dynamically -->
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="playAgainBtn" class="btn btn-primary btn-large">
+                    🔄 Play Again
+                </button>
+                <button id="homeBtn" class="btn btn-secondary btn-large">
+                    🏠 Back to Home
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Get results from sessionStorage
+        const results = JSON.parse(sessionStorage.getItem('gameResults') || '{}');
+        
+        if (results.winners && results.leaderboard) {
+            displayResults(results);
+        } else {
+            // No results found, redirect to home
+            window.location.href = 'index.html';
+        }
+
+        function displayResults(data) {
+            const winnerDisplay = document.getElementById('winnerDisplay');
+            const scoresList = document.getElementById('finalScoresList');
+
+            // Display winner(s)
+            if (data.winners.length === 1) {
+                winnerDisplay.innerHTML = `
+                    <div class="trophy">🏆</div>
+                    <h2>${escapeHtml(data.winners[0].username)} Wins!</h2>
+                    <p class="winner-score">${data.winners[0].score} points</p>
+                `;
+            } else {
+                const winnerNames = data.winners.map(w => escapeHtml(w.username)).join(', ');
+                winnerDisplay.innerHTML = `
+                    <div class="trophy">🏆</div>
+                    <h2>It's a Tie!</h2>
+                    <p class="winner-names">${winnerNames}</p>
+                    <p class="winner-score">${data.winners[0].score} points each</p>
+                `;
+            }
+
+            // Display all scores with rankings
+            scoresList.innerHTML = data.leaderboard.map((player, index) => {
+                const medals = ['🥇', '🥈', '🥉'];
+                const medal = medals[index] || `${index + 1}.`;
+                
+                return `
+                    <div class="score-item ${index === 0 ? 'first-place' : ''}">
+                        <span class="rank">${medal}</span>
+                        <span class="player-name">${escapeHtml(player.username)}</span>
+                        <span class="player-score">${player.score} pts</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Button event listeners
+        document.getElementById('playAgainBtn').addEventListener('click', () => {
+            sessionStorage.removeItem('gameResults');
+            window.location.href = 'index.html';
+        });
+
+        document.getElementById('homeBtn').addEventListener('click', () => {
+            sessionStorage.removeItem('gameResults');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

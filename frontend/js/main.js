@@ -117,7 +117,13 @@ function updateLobbyPlayers(players) {
     const playerCount = document.getElementById('playerCount');
     const waitingIndicator = document.getElementById('waitingForPlayers');
     
-    if (!playersList) return;
+    console.log('📊 Updating player list:', players);
+    console.log('👥 Number of players:', players.length);
+    
+    if (!playersList) {
+        console.error('❌ playersList element not found!');
+        return;
+    }
     
     // Update player count
     if (playerCount) {
@@ -127,8 +133,14 @@ function updateLobbyPlayers(players) {
     // Clear current list
     playersList.innerHTML = '';
     
+    if (players.length === 0) {
+        console.warn('⚠️ No players in list!');
+        playersList.innerHTML = '<p style="color: white; text-align: center;">No players yet...</p>';
+    }
+    
     // Add players
     players.forEach((player, index) => {
+        console.log(`Adding player ${index + 1}:`, player);
         const playerItem = createPlayerItem(player, index);
         playersList.appendChild(playerItem);
     });

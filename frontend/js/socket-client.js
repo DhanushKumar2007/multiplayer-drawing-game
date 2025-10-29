@@ -130,8 +130,18 @@ function leaveRoom() {
 // ==================== EVENT HANDLERS ====================
 
 function handleRoomCreated(data) {
-    console.log('Room created:', data);
+    console.log('✅ Room created:', data);
+    console.log('📊 Room details:', data.room);
+    console.log('👥 Players in room:', data.room.players);
+    console.log('👤 Player count:', data.room.player_count);
+    
     currentRoomCode = data.room_code;
+    
+    // Verify player was added
+    if (data.room.player_count === 0) {
+        console.error('❌ ERROR: Player count is 0! Creator was not added to room!');
+    }
+    
     window.location.href = `lobby.html?room=${data.room_code}`;
 }
 

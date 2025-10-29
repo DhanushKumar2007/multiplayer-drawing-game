@@ -44,6 +44,8 @@ class Room:
         self.players = {}  # {sid: Player}
         self.game_started = False
         self.created_at = datetime.now()
+        player = Player(host_sid, host_username)
+        self.players[host_sid] = player
         
         # Add host as first player
         self.add_player(host_sid, host_username)

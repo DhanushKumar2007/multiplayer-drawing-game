@@ -74,13 +74,23 @@ def handle_create_room(data):
     username = data.get('username', 'Player')
     sid = request.sid
     
+    print(f"🎨 Creating room - User: {username}, SID: {sid}")
+    
+    # Create the room
     room = create_room(sid, username)
+    
+    # Join the Socket.IO room
     join_room(room.room_code)
     
+    print(f"✅ Room created - Code: {room.room_code}, Players: {room.get_player_count()}")
+    
+    # Send response to creator
     emit('room_created', {
         'room_code': room.room_code,
         'room': room.to_dict()
     })
+    
+    print(f"📊 Room details: {room.to_dict()}")
 
 
 @socketio.on('join_room')

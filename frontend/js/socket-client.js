@@ -12,7 +12,7 @@ let isDrawer = false;
 // Initialize Socket.IO connection
 function initializeSocket() {
     // Connect to server (adjust URL for production)
-    socket = io('http://localhost:5000', {
+    socket = io(window.location.origin, {
         transports: ['websocket'],
         reconnection: true,
         reconnectionDelay: 1000,

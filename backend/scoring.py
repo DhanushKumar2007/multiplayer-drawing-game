@@ -1,7 +1,7 @@
 """
 Scoring Logic for Drawing Game
 """
-from config import (
+from .config import (
     POINTS_PER_CORRECT_GUESS,
     DRAWER_POINTS_PER_GUESS,
     SPEED_BONUS_THRESHOLD,

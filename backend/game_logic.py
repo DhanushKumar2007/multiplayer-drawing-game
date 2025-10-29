@@ -3,8 +3,8 @@ Game Logic - Rounds, Turns, and Game State Management
 """
 import time
 from datetime import datetime
-from config import TOTAL_ROUNDS, TURN_DURATION
-from words import get_random_word
+from .config import TOTAL_ROUNDS, TURN_DURATION
+from .words import get_random_word
 
 
 class GameState:

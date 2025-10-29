@@ -7,11 +7,11 @@ from flask_cors import CORS
 import threading
 import time
 
-from rooms import create_room, get_room, join_room as join_room_logic, leave_room as leave_room_logic, get_player_room
-from game_logic import get_game_state, delete_game_state
-from scoring import calculate_guesser_points, calculate_drawer_points, get_leaderboard, get_winner, reset_round_scores
-from words import validate_guess, get_word_hint
-from config import MIN_PLAYERS, TURN_DURATION
+from .rooms import create_room, get_room, join_room as join_room_logic, leave_room as leave_room_logic, get_player_room
+from .game_logic import get_game_state, delete_game_state
+from .scoring import calculate_guesser_points, calculate_drawer_points, get_leaderboard, get_winner, reset_round_scores
+from .words import validate_guess, get_word_hint
+from .config import MIN_PLAYERS, TURN_DURATION
 
 app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
 app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'

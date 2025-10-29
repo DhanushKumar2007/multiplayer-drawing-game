@@ -4,7 +4,7 @@ Room and Player Management
 import random
 import string
 from datetime import datetime
-from config import ROOM_CODE_LENGTH, ROOM_CODE_CHARS, MAX_PLAYERS
+from .config import ROOM_CODE_LENGTH, ROOM_CODE_CHARS, MAX_PLAYERS
 
 # Global storage for rooms (in production, use Redis or database)
 rooms = {}

@@ -330,4 +330,23 @@ def handle_turn_end(room_code):
 
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    import os
+    
+    # Get port from environment (Render provides this)
+    port = int(os.environ.get('PORT', 5000))
+    
+    # Check if running on Render (production)
+    is_production = os.environ.get('RENDER') is not None
+    
+    if is_production:
+        # Production settings for Render
+        socketio.run(
+            app, 
+            host='0.0.0.0', 
+            port=port, 
+            debug=False,
+            allow_unsafe_werkzeug=True  # Required for Render deployment
+        )
+    else:
+        # Development settings for local testing
+        socketio.run(app, host='0.0.0.0', port=5000, debug=True)

@@ -5,9 +5,7 @@
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-5.3.5-orange.svg)](https://socket.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> A real-time multiplayer drawing and guessing game built with Flask, Socket.IO, and HTML5 Canvas. Created as part of my student developer portfolio.
-
-![Game Preview](https://via.placeholder.com/800x400/667eea/ffffff?text=Add+Your+Screenshot+Here)
+> A real-time multiplayer drawing and guessing game built with Flask, Socket.IO, and HTML5 Canvas.
 
 ## ✨ Features
 
@@ -17,7 +15,7 @@
 - 😂 **Animated Emoji Reactions**: Express yourself with floating emojis
 - ⏱️ **Smart Timer System**: 60-second turns with visual warnings
 - 🏆 **Dynamic Scoring**: Points with speed bonuses for quick guesses
-- 📱 **Fully Responsive**: Works seamlessly on desktop, tablet, and mobile
+- 📱 **Fully Responsive**: Works on desktop, tablet, and mobile
 - ✨ **Modern UI**: Glassmorphism design with smooth animations
 
 ## 🚀 Quick Start
@@ -32,7 +30,7 @@
 
 1. **Clone the repository**
 ```bash
-   git clone https://github.com/YOUR_USERNAME/multiplayer-drawing-game.git
+   git clone https://github.com/DhanushKumar2007/multiplayer-drawing-game.git
    cd multiplayer-drawing-game
 ```
 
@@ -87,15 +85,15 @@
 
 ### Backend
 - **Flask** - Python web framework
-- **Flask-SocketIO** - WebSocket support for real-time communication
+- **Flask-SocketIO** - WebSocket support
 - **Python-SocketIO** - Socket.IO server
-- **Eventlet** - Concurrent networking library
+- **Eventlet** - Concurrent networking
 
 ### Frontend
 - **HTML5 Canvas API** - Drawing functionality
-- **Socket.IO Client** - Real-time bidirectional communication
-- **Vanilla JavaScript** - No frameworks, pure JS
-- **CSS3** - Modern animations with glassmorphism
+- **Socket.IO Client** - Real-time communication
+- **Vanilla JavaScript** - Pure JS, no frameworks
+- **CSS3** - Modern animations
 
 ## 📁 Project Structure
 ```
@@ -118,50 +116,15 @@ multiplayer-drawing-game/
 └── README.md
 ```
 
-## 🎨 Screenshots
-
-> Add screenshots of your game here when deployed
-
-## 🚀 Deployment
-
-### Deploy to Render (Free)
-
-1. Fork this repository
-2. Sign up at [render.com](https://render.com)
-3. Create new Web Service
-4. Connect your GitHub repository
-5. Use these settings:
-   - **Build Command**: `pip install -r backend/requirements.txt`
-   - **Start Command**: `cd backend && python app.py`
-
-### Deploy to Railway (Free)
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 Future Enhancements
-
-- [ ] User authentication system
-- [ ] Custom word lists
-- [ ] Private rooms with passwords
-- [ ] Game replay feature
-- [ ] Leaderboard system
-- [ ] Mobile app (React Native)
-
 ## 📧 Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_twitter) - your.email@example.com
-
-Project Link: [https://github.com/YOUR_USERNAME/multiplayer-drawing-game](https://github.com/YOUR_USERNAME/multiplayer-drawing-game)
+Dhanush Kumar - [@DhanushKumar2007](https://github.com/DhanushKumar2007)
+Email - [dhanushkumar1402@gmail.com]
+Project Link: [https://github.com/DhanushKumar2007/multiplayer-drawing-game](https://github.com/DhanushKumar2007/multiplayer-drawing-game)
 
 ## 📄 License
 
@@ -170,8 +133,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - Inspired by Skribbl.io and Pictionary
-- Built as part of [Your University] student developer portfolio
-- Created for [Student Ambassador Program Name] application
+- Built for student developer portfolio
 
 ---
 

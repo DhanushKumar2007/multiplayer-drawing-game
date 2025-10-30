@@ -240,11 +240,25 @@ function handleNewTurn(data) {
     console.log('New turn:', data);
     isDrawer = (data.drawer_sid === mySocketId);
     
+    // Update current drawer display
+    const currentDrawerName = data.drawer_username || 'Unknown';
+    document.getElementById('currentDrawerName').textContent = currentDrawerName;
+    
+    // Show/hide word based on whether it's your turn
+    const wordDisplay = document.getElementById('wordDisplay');
+    const currentWord = document.getElementById('currentWord');
+    const categoryDisplay = document.getElementById('currentCategory');
+    
     if (isDrawer) {
-        showNotification("It's your turn to draw!", 'info');
+        showNotification("It's your turn to draw!", 'success');
+        currentWord.textContent = data.word || 'Loading...';
+        categoryDisplay.textContent = data.category || '-';
+        enableDrawing();
     } else {
-        showNotification("New turn started!", 'info');
-        hideDrawingInterface();
+        showNotification(`${currentDrawerName}'s turn to draw!`, 'info');
+        currentWord.textContent = '_ '.repeat((data.word || '').length).trim();
+        categoryDisplay.textContent = data.category || '-';
+        disableDrawing();
     }
     
     updateGameState(data.game_state);

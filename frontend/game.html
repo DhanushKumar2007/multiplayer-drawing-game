@@ -29,14 +29,19 @@
                     </div>
                 </div>
                 
-                <div class="word-display" id="wordDisplay" style="display: none;">
-                    <span class="word-label">Your word:</span>
-                    <span class="word" id="currentWord"></span>
+                <div class="word-display" id="wordDisplay">
+                    <span class="word-label">Word to draw:</span>
+                    <span class="word" id="currentWord">Waiting for turn...</span>
                 </div>
                 
                 <div class="category-display" id="categoryDisplay">
                     <span class="category-label">Category:</span>
                     <span class="category-value" id="currentCategory">-</span>
+                </div>
+                
+                <div class="current-drawer" id="currentDrawer">
+                    <span class="drawer-label">Current Drawer:</span>
+                    <span class="drawer-name" id="currentDrawerName">-</span>
                 </div>
             </div>
 
@@ -181,6 +186,7 @@
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="js/socket-client.js"></script>
+    <script src="js/drawing-permissions.js"></script>
     <script src="js/canvas.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/reactions.js"></script>

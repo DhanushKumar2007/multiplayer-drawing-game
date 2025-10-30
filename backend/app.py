@@ -385,9 +385,13 @@ def handle_turn_end(room_code):
         time.sleep(3)
         game_state.start_turn()
         
+        drawer = room.get_player(game_state.drawer_sid)
         socketio.emit('new_turn', {
             'game_state': game_state.to_dict(),
-            'drawer_sid': game_state.drawer_sid
+            'drawer_sid': game_state.drawer_sid,
+            'drawer_username': drawer.username if drawer else 'Unknown',
+            'word': game_state.current_word,
+            'category': game_state.word_category
         }, room=room_code)
         
         socketio.emit('your_turn_to_draw', {

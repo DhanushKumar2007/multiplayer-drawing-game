@@ -11,12 +11,27 @@ let isDrawer = false;
 
 // Initialize Socket.IO connection
 function initializeSocket() {
-    // Connect to server (adjust URL for production)
-    socket = io(window.location.origin, {
-        transports: ['websocket'],
+    // Get the correct server URL
+    let serverUrl;
+    
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Local development
+        serverUrl = 'http://localhost:5000';
+    } else {
+        // Production (Render or any deployed server)
+        serverUrl = window.location.origin;
+    }
+    
+    console.log('🔌 Connecting to:', serverUrl);
+    
+    // Connect to server
+    socket = io(serverUrl, {
+        transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000,
-        reconnectionAttempts: 5
+        reconnectionAttempts: 10,
+        timeout: 20000,
+        forceNew: false
     });
 
     // Connection event handlers

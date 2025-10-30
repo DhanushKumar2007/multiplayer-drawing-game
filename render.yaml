@@ -2,8 +2,12 @@ services:
   - type: web
     name: multiplayer-drawing-game
     env: python
-    buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "cd backend && python app.py"
+    region: oregon
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: python -m backend.app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true

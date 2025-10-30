@@ -6,6 +6,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 import threading
 import time
+import os
 
 from .rooms import create_room, get_room, join_room as join_room_logic, leave_room as leave_room_logic, get_player_room
 from .game_logic import get_game_state, delete_game_state
@@ -14,9 +15,27 @@ from .words import validate_guess, get_word_hint
 from .config import MIN_PLAYERS, TURN_DURATION
 
 app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
-app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
-CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Enhanced CORS configuration
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
+
+# Enhanced SocketIO configuration
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins="*",
+    async_mode='eventlet',
+    logger=False,
+    engineio_logger=False,
+    ping_timeout=60,
+    ping_interval=25
+)
 
 
 # ===== SERVE STATIC FILES =====
@@ -47,25 +66,32 @@ def handle_disconnect():
     room = get_player_room(sid)
     if room:
         room_code = room.room_code
-        player = room.get_player(sid)
-        username = player.username if player else "Unknown"
         
-        game_state = get_game_state(room_code)
-        was_drawer = game_state.is_drawer(sid)
-        
-        leave_room_logic(room_code, sid)
-        leave_room(room_code)
-        
-        if room.get_player_count() > 0:
-            emit('player_left', {
-                'username': username,
-                'players': room.get_players_list()
-            }, room=room_code)
+        # Only handle disconnection if game has started
+        # In lobby, let players reconnect
+        if room.game_started:
+            player = room.get_player(sid)
+            username = player.username if player else "Unknown"
             
-            if was_drawer and game_state.game_active:
-                handle_turn_end(room_code)
+            game_state = get_game_state(room_code)
+            was_drawer = game_state.is_drawer(sid)
+            
+            leave_room_logic(room_code, sid)
+            leave_room(room_code)
+            
+            if room.get_player_count() > 0:
+                emit('player_left', {
+                    'username': username,
+                    'players': room.get_players_list()
+                }, room=room_code)
+                
+                if was_drawer and game_state.game_active:
+                    handle_turn_end(room_code)
+            else:
+                delete_game_state(room_code)
         else:
-            delete_game_state(room_code)
+            # In lobby - just log, don't remove player yet
+            print(f"⏳ Player disconnected in lobby, keeping room alive: {room_code}")
 
 
 @socketio.on('create_room')
@@ -89,8 +115,6 @@ def handle_create_room(data):
         'room_code': room.room_code,
         'room': room.to_dict()
     })
-    
-    print(f"📊 Room details: {room.to_dict()}")
 
 
 @socketio.on('join_room')
@@ -100,13 +124,18 @@ def handle_join_room(data):
     username = data.get('username', 'Player')
     sid = request.sid
     
+    print(f"🔍 Join attempt - Room: {room_code}, User: {username}")
+    
     room, message = join_room_logic(room_code, sid, username)
     
     if not room:
+        print(f"❌ Join failed: {message}")
         emit('join_error', {'message': message})
         return
     
     join_room(room_code)
+    
+    print(f"✅ Player joined - Room: {room_code}, Total players: {room.get_player_count()}")
     
     emit('room_joined', {
         'room_code': room_code,
@@ -340,8 +369,6 @@ def handle_turn_end(room_code):
 
 
 if __name__ == '__main__':
-    import os
-    
     # Get port from environment (Render provides this)
     port = int(os.environ.get('PORT', 5000))
     
@@ -349,14 +376,16 @@ if __name__ == '__main__':
     is_production = os.environ.get('RENDER') is not None
     
     if is_production:
+        print(f"🚀 Starting production server on port {port}")
         # Production settings for Render
         socketio.run(
             app, 
             host='0.0.0.0', 
             port=port, 
             debug=False,
-            allow_unsafe_werkzeug=True  # Required for Render deployment
+            allow_unsafe_werkzeug=True
         )
     else:
+        print(f"🔧 Starting development server on port {port}")
         # Development settings for local testing
         socketio.run(app, host='0.0.0.0', port=5000, debug=True)

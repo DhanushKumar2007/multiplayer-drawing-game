@@ -227,6 +227,15 @@ function handlePlayerLeft(data) {
 function handleGameStarted(data) {
     console.log('Game started:', data);
     isDrawer = (data.drawer_sid === mySocketId);
+    
+    // Store initial game state
+    localStorage.setItem('gameState', JSON.stringify({
+        isDrawer,
+        drawerSid: data.drawer_sid,
+        drawerUsername: data.drawer_username,
+    }));
+    
+    // Redirect to game page
     window.location.href = `game.html?room=${currentRoomCode}`;
 }
 

@@ -229,24 +229,46 @@ def handle_start_game(data):
         emit('error', {'message': f'Need at least {MIN_PLAYERS} players'})
         return
     
-    room.game_started = True
-    game_state = get_game_state(room_code)
-    player_sids = list(room.players.keys())
-    game_state.start_game(player_sids)
-    game_state.start_turn()
-    reset_round_scores(room.players)
-    
-    emit('game_started', {
-        'game_state': game_state.to_dict(),
-        'drawer_sid': game_state.drawer_sid
-    }, room=room_code)
-    
-    emit('your_turn_to_draw', {
-        'word': game_state.current_word,
-        'category': game_state.word_category
-    }, room=game_state.drawer_sid)
-    
-    start_turn_timer(room_code)
+    try:
+        room.game_started = True
+        game_state = get_game_state(room_code)
+        player_sids = list(room.players.keys())
+        
+        # Initialize game state
+        game_state.start_game(player_sids)
+        success = game_state.start_turn()
+        
+        if not success:
+            emit('error', {'message': 'Failed to start turn'})
+            return
+            
+        reset_round_scores(room.players)
+        
+        # Get drawer information
+        drawer = room.get_player(game_state.drawer_sid)
+        drawer_username = drawer.username if drawer else 'Unknown'
+        
+        # Notify all players about game start
+        emit('game_started', {
+            'game_state': game_state.to_dict(),
+            'drawer_sid': game_state.drawer_sid,
+            'drawer_username': drawer_username
+        }, room=room_code)
+        
+        # Notify drawer about their turn
+        emit('your_turn_to_draw', {
+            'word': game_state.current_word,
+            'category': game_state.word_category
+        }, room=game_state.drawer_sid)
+        
+        # Start turn timer
+        start_turn_timer(room_code)
+        
+        print(f"✅ Game started in room {room_code} - First drawer: {drawer_username}")
+        
+    except Exception as e:
+        print(f"❌ Error starting game: {str(e)}")
+        emit('error', {'message': 'Failed to start game'})
 
 
 @socketio.on('draw')

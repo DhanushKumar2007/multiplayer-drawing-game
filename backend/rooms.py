@@ -44,11 +44,12 @@ class Room:
         self.players = {}  # {sid: Player}
         self.game_started = False
         self.created_at = datetime.now()
+        
+        # Add host as first player
         player = Player(host_sid, host_username)
         self.players[host_sid] = player
         
-        # Add host as first player
-        self.add_player(host_sid, host_username)
+        print(f"🏠 Room initialized - Code: {room_code}, Host: {host_username}, Player count: {len(self.players)}")
     
     def add_player(self, sid, username):
         """Add a player to the room."""
@@ -63,6 +64,7 @@ class Room:
             return False, "Username already taken"
         
         self.players[sid] = Player(sid, username)
+        print(f"✅ Player added - Room: {self.room_code}, User: {username}, Total players: {len(self.players)}")
         return True, "Joined successfully"
     
     def remove_player(self, sid):
@@ -105,6 +107,7 @@ def create_room(host_sid, host_username):
     room_code = generate_room_code()
     room = Room(room_code, host_sid, host_username)
     rooms[room_code] = room
+    print(f"🎨 Room created - Code: {room_code}, Players: {room.get_player_count()}")
     return room
 
 
@@ -118,6 +121,7 @@ def join_room(room_code, sid, username):
     room = get_room(room_code)
     
     if not room:
+        print(f"❌ Room not found: {room_code}")
         return None, "Room not found"
     
     if room.game_started:
@@ -128,6 +132,7 @@ def join_room(room_code, sid, username):
     if success:
         return room, message
     else:
+        print(f"❌ Failed to add player: {message}")
         return None, message
 
 

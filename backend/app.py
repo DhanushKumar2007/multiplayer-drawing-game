@@ -13,6 +13,7 @@ from .game_logic import get_game_state, delete_game_state
 from .scoring import calculate_guesser_points, calculate_drawer_points, get_leaderboard, get_winner, reset_round_scores
 from .words import validate_guess, get_word_hint
 from .config import MIN_PLAYERS, TURN_DURATION
+from .session import game_sessions
 
 app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -81,6 +82,8 @@ def handle_connect():
 def handle_get_game_state(data):
     """Handle request for current game state."""
     room_code = data.get('room_code')
+    sid = request.sid
+    
     if not room_code:
         return
     
@@ -91,22 +94,38 @@ def handle_get_game_state(data):
     game_state = get_game_state(room_code)
     if not game_state:
         return
+        
+    # Get session data
+    session_data = game_sessions.get_session(sid)
+    if not session_data:
+        # Create new session if it doesn't exist
+        player = room.get_player(sid)
+        if player:
+            game_sessions.create_session(sid, room_code, player.username)
+            session_data = game_sessions.get_session(sid)
     
     # Get current drawer information
-    current_drawer = None
-    drawer_username = None
-    if game_state.drawer_sid:
-        drawer = room.get_player(game_state.drawer_sid)
-        if drawer:
-            drawer_username = drawer.username
+    drawer = room.get_player(game_state.drawer_sid)
+    drawer_username = drawer.username if drawer else 'Unknown'
+    
+    # Update session with current state
+    if session_data:
+        is_drawer = game_state.drawer_sid == sid
+        game_sessions.update_session(
+            sid,
+            is_drawer=is_drawer,
+            current_word=game_state.current_word if is_drawer else None
+        )
     
     # Send game state update
     emit('game_state_update', {
         'current_drawer': drawer_username,
         'drawer_sid': game_state.drawer_sid,
-        'word': game_state.current_word if game_state.drawer_sid == request.sid else None,
+        'word': game_state.current_word if game_state.drawer_sid == sid else None,
         'category': game_state.word_category,
-        'current_round': game_state.current_round
+        'current_round': game_state.current_round,
+        'is_drawer': game_state.drawer_sid == sid,
+        'game_active': game_state.game_active
     })
 
 @socketio.on('disconnect')
@@ -228,6 +247,10 @@ def handle_start_game(data):
     if room.get_player_count() < MIN_PLAYERS:
         emit('error', {'message': f'Need at least {MIN_PLAYERS} players'})
         return
+        
+    # Initialize session data for all players in the room
+    for player_sid, player in room.players.items():
+        game_sessions.create_session(player_sid, room_code, player.username)
     
     try:
         room.game_started = True
@@ -248,11 +271,29 @@ def handle_start_game(data):
         drawer = room.get_player(game_state.drawer_sid)
         drawer_username = drawer.username if drawer else 'Unknown'
         
+        # Update drawer's session
+        game_sessions.update_session(
+            game_state.drawer_sid,
+            is_drawer=True,
+            current_word=game_state.current_word
+        )
+        
+        # Update other players' sessions
+        for player_sid in player_sids:
+            if player_sid != game_state.drawer_sid:
+                game_sessions.update_session(
+                    player_sid,
+                    is_drawer=False,
+                    current_word=None
+                )
+        
         # Notify all players about game start
         emit('game_started', {
             'game_state': game_state.to_dict(),
             'drawer_sid': game_state.drawer_sid,
-            'drawer_username': drawer_username
+            'drawer_username': drawer_username,
+            'word': game_state.current_word if request.sid == game_state.drawer_sid else None,
+            'category': game_state.word_category
         }, room=room_code)
         
         # Notify drawer about their turn

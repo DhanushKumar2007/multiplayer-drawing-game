@@ -81,6 +81,10 @@ class Room:
                     del self.players[existing_sid]
                     p.sid = sid
                     self.players[sid] = p
+                    # If the rejoining player was the host, update host_sid to new SID
+                    if self.host_sid == existing_sid:
+                        print(f"🔧 Updating host SID for room {self.room_code}: {existing_sid} -> {sid}")
+                        self.host_sid = sid
                     return True, "Rejoined successfully"
                 else:
                     return False, "Already in room"

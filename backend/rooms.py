@@ -39,17 +39,27 @@ class Player:
 class Room:
     """Represents a game room."""
     def __init__(self, room_code, host_sid, host_username):
-        self.room_code = room_code
+        if not room_code or not host_sid or not host_username:
+            raise ValueError("Room code, host SID, and host username are required")
+            
+        self.room_code = room_code.upper()  # Ensure uppercase
         self.host_sid = host_sid
         self.players = {}  # {sid: Player}
         self.game_started = False
         self.created_at = datetime.now()
         
         # Add host as first player
-        player = Player(host_sid, host_username)
-        self.players[host_sid] = player
-        
-        print(f"🏠 Room initialized - Code: {room_code}, Host: {host_username}, Player count: {len(self.players)}")
+        try:
+            player = Player(host_sid, host_username)
+            self.players[host_sid] = player
+            print(f"🏠 Room initialized - Code: {room_code}, Host: {host_username}, Player count: {len(self.players)}")
+            
+            if host_sid not in self.players:
+                raise Exception("Failed to add host to players list")
+                
+        except Exception as e:
+            print(f"❌ Error initializing room: {str(e)}")
+            raise
     
     def add_player(self, sid, username):
         """Add a player to the room."""
@@ -104,11 +114,31 @@ class Room:
 
 def create_room(host_sid, host_username):
     """Create a new room."""
-    room_code = generate_room_code()
-    room = Room(room_code, host_sid, host_username)
-    rooms[room_code] = room
-    print(f"🎨 Room created - Code: {room_code}, Players: {room.get_player_count()}")
-    return room
+    if not host_sid or not host_username:
+        raise ValueError("Host SID and username are required to create a room")
+        
+    try:
+        room_code = generate_room_code()
+        room = Room(room_code, host_sid, host_username)
+        
+        # Verify room was created successfully
+        if not room or room.get_player_count() == 0:
+            raise Exception("Room creation failed - no players added")
+            
+        # Store room in global rooms dictionary
+        rooms[room_code] = room
+        
+        print(f"🎨 Room created successfully:")
+        print(f"   - Code: {room_code}")
+        print(f"   - Host: {host_username} (SID: {host_sid})")
+        print(f"   - Players: {room.get_player_count()}")
+        print(f"   - Total rooms: {len(rooms)}")
+        
+        return room
+        
+    except Exception as e:
+        print(f"❌ Failed to create room: {str(e)}")
+        raise
 
 
 def get_room(room_code):
@@ -118,18 +148,30 @@ def get_room(room_code):
 
 def join_room(room_code, sid, username):
     """Join an existing room."""
+    if not room_code:
+        print("❌ No room code provided")
+        return None, "Room code is required"
+        
+    # Convert room code to uppercase for consistency
+    room_code = room_code.upper()
     room = get_room(room_code)
     
     if not room:
         print(f"❌ Room not found: {room_code}")
+        print(f"Available rooms: {list(rooms.keys())}")
         return None, "Room not found"
     
     if room.game_started:
         return None, "Game already in progress"
     
+    # Log room state before adding player
+    print(f"📊 Room state before adding player - Code: {room_code}, Players: {room.get_player_count()}")
+    
     success, message = room.add_player(sid, username)
     
     if success:
+        # Log successful join
+        print(f"✅ Player joined successfully - Room: {room_code}, User: {username}, Total players: {room.get_player_count()}")
         return room, message
     else:
         print(f"❌ Failed to add player: {message}")

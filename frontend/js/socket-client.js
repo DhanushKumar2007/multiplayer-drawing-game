@@ -150,14 +150,19 @@ function handleRoomCreated(data) {
     console.log('👥 Players in room:', data.room.players);
     console.log('👤 Player count:', data.room.player_count);
     
-    currentRoomCode = data.room_code;
-    
-    // Verify player was added
-    if (data.room.player_count === 0) {
-        console.error('❌ ERROR: Player count is 0! Creator was not added to room!');
+    if (!data.room_code || !data.room || !data.room.players || data.room.player_count === 0) {
+        console.error('❌ ERROR: Invalid room data or player not added!');
+        showNotification('Error creating room. Please try again.', 'error');
+        return;
     }
     
-    window.location.href = `lobby.html?room=${data.room_code}`;
+    currentRoomCode = data.room_code.toUpperCase();
+    showNotification('Room created successfully!', 'success');
+    
+    // Small delay to ensure room is fully created on server
+    setTimeout(() => {
+        window.location.href = `lobby.html?room=${currentRoomCode}`;
+    }, 500);
 }
 
 function handleRoomJoined(data) {

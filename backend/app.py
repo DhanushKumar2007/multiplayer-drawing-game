@@ -30,7 +30,7 @@ CORS(app, resources={
 socketio = SocketIO(
     app, 
     cors_allowed_origins="*",
-    async_mode='eventlet',
+    
     logger=False,
     engineio_logger=False,
     ping_timeout=60,

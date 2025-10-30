@@ -8,7 +8,7 @@ import threading
 import time
 import os
 
-from .rooms import create_room, get_room, join_room as join_room_logic, leave_room as leave_room_logic, get_player_room
+from .rooms import create_room, get_room, join_room as join_room_logic, leave_room as leave_room_logic, get_player_room, rooms
 from .game_logic import get_game_state, delete_game_state
 from .scoring import calculate_guesser_points, calculate_drawer_points, get_leaderboard, get_winner, reset_round_scores
 from .words import validate_guess, get_word_hint
@@ -28,13 +28,18 @@ CORS(app, resources={
 
 # Enhanced SocketIO configuration
 socketio = SocketIO(
-    app, 
+    app,
     cors_allowed_origins="*",
-    
-    logger=False,
-    engineio_logger=False,
-    ping_timeout=60,
-    ping_interval=25
+    async_mode='threading',
+    logger=True,
+    engineio_logger=True,
+    ping_timeout=5000,
+    ping_interval=25000,
+    manage_session=False,
+    always_connect=True,
+    transports=['polling', 'websocket'],
+    max_http_buffer_size=1000000,
+    allow_upgrades=True
 )
 
 
@@ -53,8 +58,23 @@ def serve_static(path):
 @socketio.on('connect')
 def handle_connect():
     """Handle client connection."""
-    print(f"Client connected: {request.sid}")
-    emit('connected', {'sid': request.sid})
+    sid = request.sid
+    print(f"🔌 Client connected: {sid}")
+    
+    # Check if this is a reconnection
+    for room_code, room in rooms.items():
+        for player_sid, player in room.players.items():
+            if player_sid == sid:
+                print(f"🔄 Reconnection detected for player: {player.username}")
+                join_room(room_code)
+                emit('reconnected', {
+                    'room_code': room_code,
+                    'room': room.to_dict()
+                })
+                return
+    
+    # New connection
+    emit('connected', {'sid': sid})
 
 
 @socketio.on('disconnect')
@@ -66,15 +86,19 @@ def handle_disconnect():
     room = get_player_room(sid)
     if room:
         room_code = room.room_code
+        player = room.get_player(sid)
         
-        # Only handle disconnection if game has started
-        # In lobby, let players reconnect
-        if room.game_started:
-            player = room.get_player(sid)
-            username = player.username if player else "Unknown"
+        if not player:
+            print(f"❌ No player found for SID: {sid}")
+            return
             
+        username = player.username
+        print(f"👤 Player '{username}' disconnected from room: {room_code}")
+        
+        if room.game_started:
+            # Handle disconnection during game
             game_state = get_game_state(room_code)
-            was_drawer = game_state.is_drawer(sid)
+            was_drawer = game_state and game_state.is_drawer(sid)
             
             leave_room_logic(room_code, sid)
             leave_room(room_code)
@@ -85,13 +109,19 @@ def handle_disconnect():
                     'players': room.get_players_list()
                 }, room=room_code)
                 
-                if was_drawer and game_state.game_active:
+                if was_drawer and game_state and game_state.game_active:
                     handle_turn_end(room_code)
             else:
-                delete_game_state(room_code)
+                if game_state:
+                    delete_game_state(room_code)
         else:
-            # In lobby - just log, don't remove player yet
+            # Keep room and player data for reconnection in lobby
             print(f"⏳ Player disconnected in lobby, keeping room alive: {room_code}")
+            # Notify other players
+            emit('player_disconnected', {
+                'username': username,
+                'sid': sid
+            }, room=room_code)
 
 
 @socketio.on('create_room')
@@ -388,4 +418,11 @@ if __name__ == '__main__':
     else:
         print(f"🔧 Starting development server on port {port}")
         # Development settings for local testing
-        socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+        socketio.run(
+            app,
+            host='0.0.0.0',
+            port=port,
+            debug=True,
+            use_reloader=False,  # Disable reloader to avoid threading issues
+            log_output=True
+        )

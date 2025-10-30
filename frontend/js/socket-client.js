@@ -26,18 +26,41 @@ function initializeSocket() {
     
     // Connect to server
     socket = io(serverUrl, {
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'],
         reconnection: true,
         reconnectionDelay: 1000,
-        reconnectionAttempts: 10,
-        timeout: 20000,
-        forceNew: false
+        reconnectionAttempts: 5,
+        timeout: 10000,
+        forceNew: true,
+        autoConnect: true
     });
 
     // Connection event handlers
     socket.on('connect', () => {
         console.log('✅ Connected to server');
         showNotification('Connected to server', 'success');
+        // If we're on the lobby page and have stored room/username, try to (re)join automatically
+        try {
+            if (window.location.pathname.includes('lobby.html')) {
+                const params = new URLSearchParams(window.location.search);
+                const roomParam = params.get('room');
+                const storedUsername = localStorage.getItem('username');
+                const storedRoom = localStorage.getItem('room_code');
+
+                // Prefer explicit query param, fall back to stored room
+                const targetRoom = (roomParam && roomParam.length === 6) ? roomParam.toUpperCase() : (storedRoom || null);
+
+                if (targetRoom && storedUsername) {
+                    console.log('🔁 Attempting auto (re)join:', targetRoom, storedUsername);
+                    // Update current variables and emit join
+                    currentUsername = storedUsername;
+                    currentRoomCode = targetRoom;
+                    socket.emit('join_room', { room_code: targetRoom, username: storedUsername });
+                }
+            }
+        } catch (e) {
+            console.warn('Auto-join failed:', e);
+        }
     });
 
     socket.on('disconnect', () => {
@@ -89,12 +112,15 @@ function initializeSocket() {
 
 function createRoom(username) {
     currentUsername = username;
+    // Persist username for reconnection after page navigation
+    try { localStorage.setItem('username', username); } catch (e) {}
     socket.emit('create_room', { username });
 }
 
 function joinRoom(roomCode, username) {
     currentUsername = username;
     currentRoomCode = roomCode;
+    try { localStorage.setItem('username', username); localStorage.setItem('room_code', roomCode); } catch (e) {}
     socket.emit('join_room', { room_code: roomCode, username });
 }
 

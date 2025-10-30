@@ -66,13 +66,26 @@ class Room:
         if len(self.players) >= MAX_PLAYERS:
             return False, "Room is full"
         
+        # If the exact SID already exists, they're already in the room
         if sid in self.players:
             return False, "Already in room"
-        
-        # Check for duplicate username
-        if any(p.username == username for p in self.players.values()):
-            return False, "Username already taken"
-        
+
+        # Check for an existing player with the same username
+        for existing_sid, p in list(self.players.items()):
+            if p.username == username:
+                # If username exists but SID differs, treat as a reconnect/rehang
+                if existing_sid != sid:
+                    # Swap SID key to the new connection
+                    print(f"🔁 Rejoin detected for username '{username}' (old SID: {existing_sid} -> new SID: {sid})")
+                    # Remove old mapping and update Player.sid
+                    del self.players[existing_sid]
+                    p.sid = sid
+                    self.players[sid] = p
+                    return True, "Rejoined successfully"
+                else:
+                    return False, "Already in room"
+
+        # No duplicate username found - add new player
         self.players[sid] = Player(sid, username)
         print(f"✅ Player added - Room: {self.room_code}, User: {username}, Total players: {len(self.players)}")
         return True, "Joined successfully"

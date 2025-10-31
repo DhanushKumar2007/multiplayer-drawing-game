@@ -14,6 +14,7 @@ from .scoring import calculate_guesser_points, calculate_drawer_points, get_lead
 from .words import validate_guess, get_word_hint
 from .config import MIN_PLAYERS, TURN_DURATION
 from .session import game_sessions
+from .game_state_handler import register_game_state_handlers
 
 app = Flask(__name__, static_folder='../frontend', template_folder='../frontend')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -42,6 +43,12 @@ socketio = SocketIO(
     max_http_buffer_size=1000000,
     allow_upgrades=True
 )
+
+# Register handlers defined in modular files (safe registration to avoid import-time decorators)
+try:
+    register_game_state_handlers(socketio, get_room, get_game_state, game_sessions)
+except Exception as e:
+    print(f"⚠️ Failed to register game state handlers: {e}")
 
 
 # ===== SERVE STATIC FILES =====
@@ -148,23 +155,34 @@ def handle_disconnect():
         
         if room.game_started:
             # Handle disconnection during game
-            game_state = get_game_state(room_code)
-            was_drawer = game_state and game_state.is_drawer(sid)
-            
-            leave_room_logic(room_code, sid)
-            leave_room(room_code)
-            
-            if room.get_player_count() > 0:
-                emit('player_left', {
-                    'username': username,
-                    'players': room.get_players_list()
-                }, room=room_code)
-                
-                if was_drawer and game_state and game_state.game_active:
-                    handle_turn_end(room_code)
-            else:
+                game_state = get_game_state(room_code)
+
+                # Remove player from game_state (players_order) and detect if drawer left
+                removed_drawer = False
                 if game_state:
-                    delete_game_state(room_code)
+                    try:
+                        removed_drawer = game_state.remove_player(sid)
+                    except Exception:
+                        removed_drawer = False
+
+                # Remove from room players
+                leave_room_logic(room_code, sid)
+                leave_room(room_code)
+
+                # If room still has players, notify them
+                if room.get_player_count() > 0:
+                    emit('player_left', {
+                        'username': username,
+                        'players': room.get_players_list()
+                    }, room=room_code)
+
+                    # If the drawer left or not enough players, end the current turn
+                    if (removed_drawer and game_state and game_state.game_active) or room.get_player_count() < 2:
+                        handle_turn_end(room_code)
+                else:
+                    # No players left - cleanup game state
+                    if game_state:
+                        delete_game_state(room_code)
         else:
             # Keep room and player data for reconnection in lobby
             print(f"⏳ Player disconnected in lobby, keeping room alive: {room_code}")
@@ -287,13 +305,13 @@ def handle_start_game(data):
                     current_word=None
                 )
         
-        # Notify all players about game start
+        # Notify all players about game start (do not include secret word)
         emit('game_started', {
             'game_state': game_state.to_dict(),
             'drawer_sid': game_state.drawer_sid,
             'drawer_username': drawer_username,
-            'word': game_state.current_word if request.sid == game_state.drawer_sid else None,
-            'category': game_state.word_category
+            'category': game_state.word_category,
+            'word_length': len(game_state.current_word) if game_state.current_word else 0
         }, room=room_code)
         
         # Notify drawer about their turn
@@ -442,12 +460,40 @@ def handle_reaction(data):
 def start_turn_timer(room_code):
     """Start background timer for turn."""
     def timer():
-        time.sleep(TURN_DURATION)
         game_state = get_game_state(room_code)
-        
-        if game_state.timer_active and game_state.is_turn_expired():
-            handle_turn_end(room_code)
-    
+        if not game_state:
+            return
+
+        # compute end time
+        end_time = game_state.turn_end_time
+        if not end_time:
+            return
+
+        # Emit updates each second until time runs out or game stops
+        while game_state.game_active and game_state.timer_active:
+            remaining = int(max(0, end_time - time.time()))
+
+            # Emit periodic timer update to the room
+            try:
+                socketio.emit('timer_update', {'time_remaining': remaining}, room=room_code)
+            except Exception:
+                pass
+
+            # If not enough players left, end the game/turn early
+            room = get_room(room_code)
+            if not room or room.get_player_count() < 2:
+                # Force end of turn
+                handle_turn_end(room_code)
+                return
+
+            if remaining <= 0:
+                # Double-check expiration
+                if game_state.is_turn_expired():
+                    handle_turn_end(room_code)
+                return
+
+            time.sleep(1)
+
     thread = threading.Thread(target=timer, daemon=True)
     thread.start()
 
@@ -460,6 +506,7 @@ def handle_turn_end(room_code):
     if not room or not game_state.game_active:
         return
     
+    # Reveal the word to everyone at end of turn
     socketio.emit('turn_ended', {
         'word': game_state.current_word,
         'leaderboard': get_leaderboard(room.players)
@@ -479,21 +526,24 @@ def handle_turn_end(room_code):
     else:
         time.sleep(3)
         game_state.start_turn()
-        
+
         drawer = room.get_player(game_state.drawer_sid)
+        # Broadcast new turn info (do NOT include the secret word here)
         socketio.emit('new_turn', {
             'game_state': game_state.to_dict(),
             'drawer_sid': game_state.drawer_sid,
             'drawer_username': drawer.username if drawer else 'Unknown',
-            'word': game_state.current_word,
-            'category': game_state.word_category
+            'category': game_state.word_category,
+            'word_length': len(game_state.current_word) if game_state.current_word else 0
         }, room=room_code)
-        
+
+        # Send the secret word only to the drawer
         socketio.emit('your_turn_to_draw', {
             'word': game_state.current_word,
             'category': game_state.word_category
         }, room=game_state.drawer_sid)
-        
+
+        # Start periodic timer updates
         start_turn_timer(room_code)
 
 

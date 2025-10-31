@@ -89,6 +89,7 @@ function initializeSocket() {
     socket.on('game_started', handleGameStarted);
     socket.on('your_turn_to_draw', handleYourTurnToDraw);
     socket.on('new_turn', handleNewTurn);
+    socket.on('timer_update', handleTimerUpdate);
     socket.on('turn_ended', handleTurnEnded);
     socket.on('game_ended', handleGameEnded);
 
@@ -260,18 +261,32 @@ function handleNewTurn(data) {
     
     if (isDrawer) {
         showNotification("It's your turn to draw!", 'success');
-        currentWord.textContent = data.word || 'Loading...';
+        // Drawer will receive their word via 'your_turn_to_draw' event; show loading until then
+        currentWord.textContent = 'Loading...';
         categoryDisplay.textContent = data.category || '-';
         enableDrawing();
     } else {
         showNotification(`${currentDrawerName}'s turn to draw!`, 'info');
-        currentWord.textContent = '_ '.repeat((data.word || '').length).trim();
+        // Use word_length to show blanks instead of revealing the word
+        const len = data.word_length || 0;
+        currentWord.textContent = len > 0 ? '_ '.repeat(len).trim() : 'Waiting for turn...';
         categoryDisplay.textContent = data.category || '-';
         disableDrawing();
     }
     
     updateGameState(data.game_state);
     clearDrawingCanvas();
+}
+
+function handleTimerUpdate(data) {
+    // Update timer display directly without restarting local interval
+    const time = data && data.time_remaining !== undefined ? data.time_remaining : null;
+    const timerEl = document.getElementById('timer');
+    if (time !== null && timerEl) {
+        const valueEl = timerEl.querySelector('.timer-value');
+        if (valueEl) valueEl.textContent = time;
+        if (time <= 10) timerEl.classList.add('warning'); else timerEl.classList.remove('warning');
+    }
 }
 
 function handleTurnEnded(data) {

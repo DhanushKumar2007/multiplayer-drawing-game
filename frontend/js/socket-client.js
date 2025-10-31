@@ -243,6 +243,9 @@ function handleGameStarted(data) {
 function handleYourTurnToDraw(data) {
     console.log('Your turn to draw:', data);
     isDrawer = true;
+    // Mirror to window scope used by canvas/drawing modules
+    try { window.isDrawer = true; } catch (e) {}
+    // Show drawing interface (drawer receives the secret word here)
     showDrawingInterface(data.word, data.category);
 }
 
@@ -265,6 +268,7 @@ function handleNewTurn(data) {
         currentWord.textContent = 'Loading...';
         categoryDisplay.textContent = data.category || '-';
         enableDrawing();
+        try { window.isDrawer = true; } catch (e) {}
     } else {
         showNotification(`${currentDrawerName}'s turn to draw!`, 'info');
         // Use word_length to show blanks instead of revealing the word
@@ -272,6 +276,7 @@ function handleNewTurn(data) {
         currentWord.textContent = len > 0 ? '_ '.repeat(len).trim() : 'Waiting for turn...';
         categoryDisplay.textContent = data.category || '-';
         disableDrawing();
+        try { window.isDrawer = false; } catch (e) {}
     }
     
     updateGameState(data.game_state);
@@ -291,11 +296,14 @@ function handleTimerUpdate(data) {
 
 function handleTurnEnded(data) {
     console.log('Turn ended:', data);
+    // Stop client-side timer if running
+    if (typeof stopTimer === 'function') stopTimer();
     showTurnEndModal(data.word, data.leaderboard);
 }
 
 function handleGameEnded(data) {
     console.log('Game ended:', data);
+    if (typeof stopTimer === 'function') stopTimer();
     showGameEndModal(data.final_leaderboard, data.winners);
 }
 
